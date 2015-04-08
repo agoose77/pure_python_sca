@@ -1,5 +1,8 @@
 class SCAMember:
 
+    def __init__(self, name):
+        self.name = name
+
     def _connect(self, other):
         pass
 
@@ -11,7 +14,9 @@ class SCAMember:
 class SCASensor(SCAMember):
     """Base class for sensors"""
 
-    def __init__(self):
+    def __init__(self, name):
+        super().__init__(name)
+
         self.controllers = []
 
         self.use_positive_pulse = False
@@ -36,9 +41,9 @@ class SCASensor(SCAMember):
 class SCAController(SCAMember):
     """Base class for controllers"""
 
-    enabled = True
+    def __init__(self, name):
+        super().__init__(name)
 
-    def __init__(self):
         self.sensors = []
         self.actuators = []
 
@@ -62,7 +67,9 @@ class SCAController(SCAMember):
 class SCAActuator(SCAMember):
     """Base class for actuators"""
 
-    def __init__(self):
+    def __init__(self, name):
+        super().__init__(name)
+
         self.controllers = []
 
         self.enabled = True

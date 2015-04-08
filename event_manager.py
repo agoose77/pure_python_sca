@@ -11,8 +11,9 @@ class SCAEventManager:
             was_positive = sensor.positive
             sensor.evaluate()
 
-            if sensor.positive and (sensor.use_positive_pulse or not was_positive):
-                triggered_sensors.append(sensor)
+            if sensor.positive:
+                if sensor.use_positive_pulse or not was_positive:
+                    triggered_sensors.append(sensor)
 
             elif sensor.use_negative_pulse or was_positive:
                 triggered_sensors.append(sensor)
