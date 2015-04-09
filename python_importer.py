@@ -1,78 +1,11 @@
-from sca import SCASensor, SCAController, SCAActuator
-from event_manager import SCAEventManager
-
-from functools import partial
-from inspect import getargspec
-
-
-class PythonController(SCAController):
-
-    def __init__(self, name):
-        super().__init__(name)
-
-
-class PythonModuleController(PythonController):
-
-    def __init__(self, name):
-        super().__init__(name)
-
-        self.module_string = ""
-        self._func = None
-
-    @property
-    def func(self):
-        if self._func is not None:
-            return self._func
-
-        *head, tail = self.module_string.split('.')
-        module_path = '.'.join(head)
-
-        module = __import__(module_path)
-        func = getattr(module, tail)
-
-        if getargspec(func):
-            func = partial(func, self)
-
-        self._func = func
-        return func
-
-    def on_triggered(self, sensor):
-        super().on_triggered(sensor)
-
-        self.func()
-
-
-class PythonScriptController(PythonController):
-
-    def __init__(self, name):
-        super().__init__(name)
-
-        self.script_string = ""
-
-    def on_triggered(self, sensor):
-        super().on_triggered(sensor)
-
-        exec(self.script_string)
-
-
-class AlwaysSensor(SCASensor):
-
-    def __init__(self, name):
-        super().__init__(name)
-
-        self._has_triggered = False
-
-    def evaluate(self):
-        self.positive = True
-
-
-converted = '''{"controllers": [{"states": 1, "type": "PYTHON", "mode": "MODULE", "name": "Python", "use_debug": false, "show_expanded": true, "use_priority": false, "actuators": [], "active": true, "module": "test_module.main"}], "actuators": [], "sensors": [{"invert": false, "type": "ALWAYS", "controllers": ["Python"], "name": "Always1", "frequency": 0, "use_tap": false, "use_pulse_true_level": false, "use_pulse_false_level": false, "active": true, "pin": false, "show_expanded": true, "use_level": false}]}'''
-
-
 from collections import OrderedDict
 
+from logic.sensors import AlwaysSensor
+from logic.controllers import PythonScriptController, PythonModuleController
+from logic.event_manager import SCAEventManager
 
-class Builder:
+
+class SCALogicImporter:
 
     def __init__(self, data):
         self.sensors = OrderedDict()
@@ -138,25 +71,26 @@ class Builder:
     def deferred_get_sensor(self, name):
         def getter():
             return self.sensors[name]
+
         return getter
 
     def deferred_get_controller(self, name):
         def getter():
             return self.controllers[name]
+
         return getter
 
     def deferred_get_actuator(self, name):
         def getter():
             return self.actuators[name]
+
         return getter
 
-    def build_always(self, sensor_data):
-        name = sensor_data['name']
-        sensor = AlwaysSensor(name)
-
+    def populate_sensor_attributes(self, sensor, sensor_data):
         sensor.use_positive_pulse = sensor_data['use_pulse_true_level']
         sensor.use_negative_pulse = sensor_data['use_pulse_false_level']
         sensor.use_tap = sensor_data['use_tap']
+        sensor.invert_output = sensor_data['invert']
 
         pending_connections = self.pending_connections
         for controller_name in sensor_data['controllers']:
@@ -164,6 +98,12 @@ class Builder:
             get_controller = self.deferred_get_controller(controller_name)
 
             pending_connections.append((get_sensor, get_controller))
+
+    def build_always(self, sensor_data):
+        name = sensor_data['name']
+        sensor = AlwaysSensor(name)
+
+        self.populate_sensor_attributes(sensor, sensor_data)
 
         return sensor
 
@@ -182,28 +122,3 @@ class Builder:
         return controller
 
 
-from json import loads
-
-data = loads(converted)
-builder = Builder(data)
-
-event_manager = builder.event_manager
-
-event_manager.update()
-event_manager.update()
-event_manager.update()
-event_manager.update()
-
-# always = AlwaysSensor()
-#
-# python_module = PythonModuleController()
-# python_module.module_string = "test_module.main"
-#
-# always.connect_to(python_module)
-#
-# event_manager = SCAEventManager()
-# event_manager.sensors.append(always)
-#
-# event_manager.update()
-# event_manager.update()
-# event_manager.update()

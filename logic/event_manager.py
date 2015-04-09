@@ -6,17 +6,7 @@ class SCAEventManager:
         self.controllers = []
 
     def update(self):
-        triggered_sensors = []
-        for sensor in self.sensors:
-            was_positive = sensor.positive
-            sensor.evaluate()
-
-            if sensor.positive:
-                if sensor.use_positive_pulse or not was_positive:
-                    triggered_sensors.append(sensor)
-
-            elif sensor.use_negative_pulse or was_positive:
-                triggered_sensors.append(sensor)
+        triggered_sensors = [s for s in self.sensors if s.evaluate()]
 
         triggered_controllers = []
         for sensor in triggered_sensors:
