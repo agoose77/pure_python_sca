@@ -4,7 +4,7 @@ from .sca import SCASensor
 class AlwaysSensor(SCASensor):
 
     def __init__(self, name):
-        super().__init__(name)
+        super(AlwaysSensor, self).__init__(name)
 
         self._trigger = True
 

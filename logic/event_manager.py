@@ -1,4 +1,4 @@
-class SCAEventManager:
+class SCAEventManager(object):
 
     def __init__(self):
         self.sensors = []

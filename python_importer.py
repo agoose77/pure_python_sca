@@ -1,11 +1,11 @@
 from collections import OrderedDict
 
 from logic.sensors import AlwaysSensor
-from logic.controllers import PythonScriptController, PythonModuleController
+from logic.controllers import PythonScriptController, PythonModuleController, ANDController
 from logic.event_manager import SCAEventManager
 
 
-class SCALogicImporter:
+class SCALogicImporter(object):
 
     def __init__(self, data):
         self.sensors = OrderedDict()
@@ -13,7 +13,7 @@ class SCALogicImporter:
         self.actuators = OrderedDict()
 
         self.sensor_builders = dict(ALWAYS=self.build_always)
-        self.controller_builders = dict(PYTHON=self.build_python)
+        self.controller_builders = dict(PYTHON=self.build_python, LOGIC_AND=self.build_and)
         self.actuator_builders = dict()
 
         self.pending_connections = []
@@ -44,7 +44,7 @@ class SCALogicImporter:
             controllers[controller_name] = controller
 
         actuators = self.actuators
-        actuator_builders = self.controller_builders
+        actuator_builders = self.actuator_builders
         for actuator_data in data['actuators']:
             actuator_type = actuator_data['type']
             actuator_name = actuator_data['name']
@@ -55,10 +55,14 @@ class SCALogicImporter:
             actuators[actuator_name] = actuator
 
         for get_x, get_y in self.pending_connections:
-            x = get_x()
-            y = get_y()
+            try:
+                x = get_x()
+                y = get_y()
 
-            x.connect_to(y)
+                x.connect_to(y)
+
+            except KeyError as err:
+                print("Connection failed", err)
 
         event_manager = SCAEventManager()
 
@@ -99,6 +103,25 @@ class SCALogicImporter:
 
             pending_connections.append((get_sensor, get_controller))
 
+    def populate_controller_attributes(self, controller, controller_data):
+        pending_connections = self.pending_connections
+        for controller_name in controller_data['actuators']:
+            get_controller = lambda: controller
+            get_actuator = self.deferred_get_actuator(controller_name)
+
+            pending_connections.append((get_controller, get_actuator))
+
+    def populate_actuator_attributes(self, actuator, actuator_data):
+        pass
+
+    def build_and(self, controller_data):
+        name = controller_data['name']
+        controller = ANDController(name)
+
+        self.populate_controller_attributes(controller, controller_data)
+
+        return controller
+
     def build_always(self, sensor_data):
         name = sensor_data['name']
         sensor = AlwaysSensor(name)
@@ -118,6 +141,8 @@ class SCALogicImporter:
         else:
             controller = PythonScriptController(name)
             controller.script_string = controller_data['text']
+
+        self.populate_controller_attributes(controller, controller_data)
 
         return controller
 

@@ -1,4 +1,4 @@
-class SCAMember:
+class SCAMember(object):
 
     def __init__(self, name):
         self.name = name
@@ -15,7 +15,7 @@ class SCASensor(SCAMember):
     """Base class for sensors"""
 
     def __init__(self, name):
-        super().__init__(name)
+        super(SCASensor, self).__init__(name)
 
         self.controllers = []
 
@@ -113,7 +113,7 @@ class SCAController(SCAMember):
     """Base class for controllers"""
 
     def __init__(self, name):
-        super().__init__(name)
+        super(SCAController, self).__init__(name)
 
         self.sensors = []
         self.actuators = []
@@ -142,7 +142,7 @@ class SCAActuator(SCAMember):
     """Base class for actuators"""
 
     def __init__(self, name):
-        super().__init__(name)
+        super(SCAActuator, self).__init__(name)
 
         self.controllers = []
 

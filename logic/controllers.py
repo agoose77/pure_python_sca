@@ -44,7 +44,9 @@ class XORController(SCAController):
 class XNORController(SCAController):
 
     def on_triggered(self, sensor):
-        previous, *sensors = self.sensors
+        previous = self.sensors[0]
+        sensors = self.sensors[1:]
+        #rprevious, *sensors = self.sensors
 
         state = False
         for sensor in sensors:
@@ -59,13 +61,13 @@ class XNORController(SCAController):
 class PythonController(SCAController):
 
     def __init__(self, name):
-        super().__init__(name)
+        super(PythonController, self).__init__(name)
 
 
 class PythonModuleController(PythonController):
 
     def __init__(self, name):
-        super().__init__(name)
+        super(PythonModuleController, self).__init__(name)
 
         self.module_string = ""
         self._func = None
@@ -75,7 +77,10 @@ class PythonModuleController(PythonController):
         if self._func is not None:
             return self._func
 
-        *head, tail = self.module_string.split('.')
+        split_path = self.module_string.split('.')
+        head = split_path[:-1]
+        tail = split_path[-1]
+
         module_path = '.'.join(head)
 
         module = __import__(module_path)
@@ -96,7 +101,7 @@ class PythonModuleController(PythonController):
 class PythonScriptController(PythonController):
 
     def __init__(self, name):
-        super().__init__(name)
+        super(PythonScriptController, self).__init__(name)
 
         self.script_string = ""
 
