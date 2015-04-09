@@ -5,6 +5,57 @@ from functools import partial
 from .sca import SCAController
 
 
+class ANDController(SCAController):
+
+    def on_triggered(self, sensor):
+        state = all([s.positive for s in self.sensors])
+        self.set_all_actuators(state)
+
+
+class NANDController(SCAController):
+
+    def on_triggered(self, sensor):
+        state = not all([s.positive for s in self.sensors])
+        self.set_all_actuators(state)
+
+
+class ORController(SCAController):
+
+    def on_triggered(self, sensor):
+        state = any([s.positive for s in self.sensors])
+        self.set_all_actuators(state)
+
+
+class NORController(SCAController):
+
+    def on_triggered(self, sensor):
+        state = not any([s.positive for s in self.sensors])
+        self.set_all_actuators(state)
+
+
+class XORController(SCAController):
+
+    def on_triggered(self, sensor):
+        positive_sensors = [s for s in self.sensors if s.positive]
+        state = len(positive_sensors) == 1
+        self.set_all_actuators(state)
+
+
+class XNORController(SCAController):
+
+    def on_triggered(self, sensor):
+        previous, *sensors = self.sensors
+
+        state = False
+        for sensor in sensors:
+            if sensor.positive != previous.positive:
+                break
+        else:
+            state = True
+
+        self.set_all_actuators(state)
+
+
 class PythonController(SCAController):
 
     def __init__(self, name):

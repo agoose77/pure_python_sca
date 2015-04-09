@@ -8,15 +8,14 @@ class SCAEventManager:
     def update(self):
         triggered_sensors = [s for s in self.sensors if s.evaluate()]
 
-        triggered_controllers = []
+        triggered_controllers = set()
         for sensor in triggered_sensors:
             sensor.triggered = True
 
             for controller in sensor.controllers:
                 controller.on_triggered(sensor)
 
-                if controller.active:
-                    triggered_controllers.append(controller)
+                triggered_controllers.add(controller)
 
             sensor.triggered = False
 

@@ -133,6 +133,10 @@ class SCAController(SCAMember):
     def on_triggered(self, sensor):
         pass
 
+    def set_all_actuators(self, state):
+        for actuator in self.actuators:
+            actuator.active = state
+
 
 class SCAActuator(SCAMember):
     """Base class for actuators"""
