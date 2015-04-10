@@ -1,4 +1,5 @@
 from direct.showbase.ShowBase import ShowBase
+from pandac.PandaModules import ModifierButtons, KeyboardButton
 from direct.task import Task
 
 from json import loads
@@ -84,6 +85,8 @@ class MyApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
 
+        self.setup_bindings_for_sensors()
+
         self.event_managers = []
 
         self.logic_manager = LogicManager()
@@ -119,6 +122,23 @@ class MyApp(ShowBase):
         # Load logic bricks
         event_manager = PandaLogicImporter(connection_data, obj).event_manager
         self.event_managers.append(event_manager)
+
+    def setup_bindings_for_sensors(self):
+        modifiers = ModifierButtons()
+
+        modifiers.addButton(KeyboardButton.lshift())
+        modifiers.addButton(KeyboardButton.rshift())
+        modifiers.addButton(KeyboardButton.lcontrol())
+        modifiers.addButton(KeyboardButton.rcontrol())
+        modifiers.addButton(KeyboardButton.lalt())
+        modifiers.addButton(KeyboardButton.ralt())
+        modifiers.addButton(KeyboardButton.meta())
+
+        # For supporting "use_all_keys" and modifier keys
+        button_node = base.buttonThrowers[0].node()
+        button_node.setButtonDownEvent('buttonDown')
+        button_node.setButtonUpEvent('buttonUp')
+        button_node.setModifierButtons(modifiers)
 
 
 def start():

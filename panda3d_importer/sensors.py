@@ -1,5 +1,4 @@
 from direct.showbase import DirectObject
-from pandac.PandaModules import ModifierButtons, KeyboardButton
 from logic.sca import SCASensor
 
 
@@ -18,29 +17,8 @@ def sort_modifiers(modifiers):
 
 class KeyboardSensor(SCASensor):
 
-    def setup(self):
-        modifiers = ModifierButtons()
-
-        modifiers.addButton(KeyboardButton.lshift())
-        modifiers.addButton(KeyboardButton.rshift())
-        modifiers.addButton(KeyboardButton.lcontrol())
-        modifiers.addButton(KeyboardButton.rcontrol())
-        modifiers.addButton(KeyboardButton.lalt())
-        modifiers.addButton(KeyboardButton.ralt())
-        modifiers.addButton(KeyboardButton.meta())
-
-        # For supporting "use_all_keys" and modifier keys
-        button_node = base.buttonThrowers[0].node()
-        button_node.setButtonDownEvent('buttonDown')
-        button_node.setButtonUpEvent('buttonUp')
-        button_node.setModifierButtons(modifiers)
-
     def __init__(self, name):
         super(KeyboardSensor, self).__init__(name)
-
-        if not hasattr(self.__class__, "X"):
-            self.__class__.X = 1
-            self.setup()
 
         self._listener = DirectObject.DirectObject()
         self._listen_keys = []
@@ -164,5 +142,8 @@ class KeyboardSensor(SCASensor):
 
 class MouseSensor(SCASensor):
 
-    def __init__(self):
-        pass
+    def __init__(self, name):
+        super(MouseSensor, self).__init__(name)
+
+        self._mouse_event = None
+
