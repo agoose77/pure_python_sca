@@ -14,7 +14,6 @@ class SCAEventManager(object):
         active_actuators = self._active_actuators
         for sensor in triggered_sensors:
             sensor.triggered = True
-            print(sensor, "TRIGGEREd")
 
             for controller in sensor.controllers:
                 controller.on_triggered(sensor)

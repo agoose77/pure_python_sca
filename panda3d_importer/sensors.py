@@ -1,4 +1,33 @@
+from direct.showbase import DirectObject
 from logic.sca import SCASensor
+
+
+MODIFIER_ORDER = "shift", "control", "alt"
+
+
+def sort_modifiers(modifiers):
+    def sort_key(item):
+        if item in MODIFIER_ORDER:
+            return len(MODIFIER_ORDER) - MODIFIER_ORDER.index(item)
+
+        return -1
+
+    modifiers.sort(key=sort_key, reverse=True)
+
+
+def get_panda_key_name(name, left_right_unique=True):
+    name = name.lower().replace("_", "").replace("ctrl", "control")
+
+    if left_right_unique:
+        name = name.replace("left", "l").replace("right", "r")
+    else:
+        name = name.replace("left", "").replace("right", "")
+
+    return name
+
+
+class KeyboardListener(DirectObject.DirectObject):
+    pass
 
 
 class KeyboardSensor(SCASensor):
@@ -6,9 +35,24 @@ class KeyboardSensor(SCASensor):
     def __init__(self, name):
         super(KeyboardSensor, self).__init__(name)
 
+        self._listener = KeyboardListener()
+        self._listen_keys = []
+
         self._key = None
+        self._modifier_1 = None
+        self._modifier_2 = None
+
+        self.use_all_keys = False
+
         self._received_event = False
         self._event_just_changed = False
+
+        # For supporting "use_all_keys" and modifier keys
+        button_node = base.buttonThrowers[0].node()
+        button_node.setButtonDownEvent('buttonDown')
+        button_node.setButtonUpEvent('buttonUp')
+
+        self._active_buttons = set()
 
     @property
     def key(self):
@@ -16,13 +60,52 @@ class KeyboardSensor(SCASensor):
 
     @key.setter
     def key(self, key):
-        if self._key is not None:
-            base.ignore("{}-up".format(self._key))
-            base.ignore(self._key)
+        self._key = get_panda_key_name(key)
+        self._update_listeners()
 
-        self._key = key
-        base.accept("{}-up".format(key), self._on_event_up)
-        base.accept(key, self._on_event_down)
+    @property
+    def modifier_1(self):
+        return self.modifier_1
+
+    @modifier_1.setter
+    def modifier_1(self, key):
+        self._modifier_1 = get_panda_key_name(key, left_right_unique=False)
+
+        self._update_listeners()
+
+    @property
+    def modifier_2(self):
+        return self.modifier_2
+
+    @modifier_2.setter
+    def modifier_2(self, key):
+        self._modifier_2 = get_panda_key_name(key, left_right_unique=False)
+
+        self._update_listeners()
+
+    def _update_listeners(self):
+        modifiers = []
+
+        if self._modifier_2:
+            modifiers.append(self._modifier_2)
+
+        if self._modifier_1:
+            modifiers.append(self._modifier_1)
+
+        sort_modifiers(modifiers)
+        keys = modifiers + [self._key]
+
+        event_name = "-".join(keys)
+        print(event_name)
+
+        # Bind keys
+        self._listener.ignoreAll()
+        self._listener.accept(event_name, self._on_event_down)
+        self._listener.accept("buttonUp", self._on_button_up)
+        self._listener.accept("buttonDown", self._on_button_down)
+
+        # Record the keys we listen for
+        self._listen_keys = keys
 
     def _on_event_down(self):
         self._received_event = True
@@ -31,6 +114,23 @@ class KeyboardSensor(SCASensor):
     def _on_event_up(self):
         self._received_event = False
         self._event_just_changed = True
+
+    def _on_button_down(self, event):
+        for btn in event.split("-"):
+            self._active_buttons.add(btn)
+
+        if self.use_all_keys:
+            self._on_event_down()
+
+    def _on_button_up(self, btn):
+        self._active_buttons.remove(btn)
+
+        if self.use_all_keys:
+            if not self._active_buttons:
+                self._on_event_up()
+
+        elif btn in self._listen_keys:
+            self._on_event_up()
 
     @property
     def desires_positive_trigger(self):

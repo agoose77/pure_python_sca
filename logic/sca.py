@@ -60,7 +60,6 @@ class SCASensor(SCAMember):
     def evaluate(self):
         previous_state = self.positive
         requires_trigger = self.desires_positive_trigger
-
         state = self.desires_positive_state
 
         if requires_trigger:
