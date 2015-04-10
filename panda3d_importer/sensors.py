@@ -15,17 +15,6 @@ def sort_modifiers(modifiers):
     modifiers.sort(key=sort_key, reverse=True)
 
 
-def get_panda_key_name(name, left_right_unique=True):
-    name = name.lower().replace("_", "").replace("ctrl", "control")
-
-    if left_right_unique:
-        name = name.replace("left", "l").replace("right", "r")
-    else:
-        name = name.replace("left", "").replace("right", "")
-
-    return name
-
-
 class KeyboardListener(DirectObject.DirectObject):
     pass
 
@@ -54,14 +43,30 @@ class KeyboardSensor(SCASensor):
 
         self._active_buttons = set()
 
+    @staticmethod
+    def get_panda_key_name(name, left_right_unique=True):
+        if name == "NONE":
+            return None
+
+        name = name.lower().replace("_", "").replace("ctrl", "control")
+
+        if left_right_unique:
+            name = name.replace("left", "l").replace("right", "r")
+        else:
+            name = name.replace("left", "").replace("right", "")
+
+        return name
+
     @property
     def key(self):
         return self._key
 
     @key.setter
     def key(self, key):
-        self._key = get_panda_key_name(key)
-        self._update_listeners()
+        self._key = key
+
+        if key is not None:
+            self._update_listeners()
 
     @property
     def modifier_1(self):
@@ -69,9 +74,10 @@ class KeyboardSensor(SCASensor):
 
     @modifier_1.setter
     def modifier_1(self, key):
-        self._modifier_1 = get_panda_key_name(key, left_right_unique=False)
+        self._modifier_1 = key
 
-        self._update_listeners()
+        if key is not None:
+            self._update_listeners()
 
     @property
     def modifier_2(self):
@@ -79,9 +85,10 @@ class KeyboardSensor(SCASensor):
 
     @modifier_2.setter
     def modifier_2(self, key):
-        self._modifier_2 = get_panda_key_name(key, left_right_unique=False)
+        self._modifier_2 = key
 
-        self._update_listeners()
+        if key is not None:
+            self._update_listeners()
 
     def _update_listeners(self):
         modifiers = []
@@ -96,7 +103,6 @@ class KeyboardSensor(SCASensor):
         keys = modifiers + [self._key]
 
         event_name = "-".join(keys)
-        print(event_name)
 
         # Bind keys
         self._listener.ignoreAll()
