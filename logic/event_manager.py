@@ -5,23 +5,39 @@ class SCAEventManager(object):
         self.actuators = []
         self.controllers = []
 
+        self._active_actuators = set()
+
     def update(self):
         triggered_sensors = [s for s in self.sensors if s.evaluate()]
-
         triggered_controllers = set()
+
+        active_actuators = self._active_actuators
         for sensor in triggered_sensors:
             sensor.triggered = True
+            print(sensor, "TRIGGEREd")
 
             for controller in sensor.controllers:
                 controller.on_triggered(sensor)
 
-                triggered_controllers.add(controller)
+                # Add any triggered controllers
+                for actuator in controller.actuators:
+                    if not actuator.active:
+                        continue
+
+                    active_actuators.add(actuator)
 
             sensor.triggered = False
 
-        for controller in triggered_controllers:
-            for actuator in controller.actuators:
-                if not actuator.active:
-                    continue
+        to_remove = []
 
-                actuator.on_update()
+        # Update actuators
+        for actuator in active_actuators:
+            if not actuator.active:
+                to_remove.append(actuator)
+                continue
+
+            actuator.on_update()
+
+        # Newly disabled actuators
+        for actuator in to_remove:
+            active_actuators.remove(actuator)
