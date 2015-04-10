@@ -15,7 +15,7 @@ class SCALogicImporter(object):
 
         self.sensor_builders = dict(ALWAYS=self.build_always)
         self.controller_builders = dict(PYTHON=self.build_python, LOGIC_AND=self.build_and, LOGIC_OR=self.build_or,
-                                        LOGIC_NOR=self.build_nor, LOGIC_XOR=self.build_xor, logic_XNOR=self.build_xnor,
+                                        LOGIC_NOR=self.build_nor, LOGIC_XOR=self.build_xor, LOGIC_XNOR=self.build_xnor,
                                         LOGIC_NAND=self.build_nand)
         self.actuator_builders = dict()
 
