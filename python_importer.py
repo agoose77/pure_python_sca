@@ -1,7 +1,8 @@
 from collections import OrderedDict
 
-from logic.sensors import AlwaysSensor
-from logic.controllers import PythonScriptController, PythonModuleController, ANDController
+from logic.sensors import AlwaysSensor, DelaySensor
+from logic.controllers import PythonScriptController, PythonModuleController, ANDController, NANDController, \
+    ORController, XORController, XNORController, NORController
 from logic.event_manager import SCAEventManager
 
 
@@ -13,7 +14,9 @@ class SCALogicImporter(object):
         self.actuators = OrderedDict()
 
         self.sensor_builders = dict(ALWAYS=self.build_always)
-        self.controller_builders = dict(PYTHON=self.build_python, LOGIC_AND=self.build_and)
+        self.controller_builders = dict(PYTHON=self.build_python, LOGIC_AND=self.build_and, LOGIC_OR=self.build_or,
+                                        LOGIC_NOR=self.build_nor, LOGIC_XOR=self.build_xor, logic_XNOR=self.build_xnor,
+                                        LOGIC_NAND=self.build_nand)
         self.actuator_builders = dict()
 
         self.pending_connections = []
@@ -122,9 +125,57 @@ class SCALogicImporter(object):
 
         return controller
 
+    def build_nand(self, controller_data):
+        name = controller_data['name']
+        controller = NANDController(name)
+
+        self.populate_controller_attributes(controller, controller_data)
+
+        return controller
+
+    def build_or(self, controller_data):
+        name = controller_data['name']
+        controller = ORController(name)
+
+        self.populate_controller_attributes(controller, controller_data)
+
+        return controller
+
+    def build_nor(self, controller_data):
+        name = controller_data['name']
+        controller = NORController(name)
+
+        self.populate_controller_attributes(controller, controller_data)
+
+        return controller
+
+    def build_xor(self, controller_data):
+        name = controller_data['name']
+        controller = XORController(name)
+
+        self.populate_controller_attributes(controller, controller_data)
+
+        return controller
+
+    def build_xnor(self, controller_data):
+        name = controller_data['name']
+        controller = XNORController(name)
+
+        self.populate_controller_attributes(controller, controller_data)
+
+        return controller
+
     def build_always(self, sensor_data):
         name = sensor_data['name']
         sensor = AlwaysSensor(name)
+
+        self.populate_sensor_attributes(sensor, sensor_data)
+
+        return sensor
+
+    def build_delay(self, sensor_data):
+        name = sensor_data['name']
+        sensor = DelaySensor(name)
 
         self.populate_sensor_attributes(sensor, sensor_data)
 
