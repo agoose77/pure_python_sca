@@ -1,4 +1,23 @@
-class SCAMember(object):
+class Aliased(object):
+
+    ALIASES = {}
+
+    def __getattr__(self, name):
+        try:
+            aliased_name = self.__class__.ALIASES[name]
+
+        except KeyError:
+            return super(Aliased, self).__getattr__(name)
+
+        else:
+            return getattr(self, aliased_name)
+
+    def __setattr__(self, name, value):
+        name = self.__class__.ALIASES.get(name, name)
+        super(Aliased, self).__setattr__(name, value)
+
+
+class SCAMember(Aliased):
 
     def __init__(self, name):
         self.name = name
