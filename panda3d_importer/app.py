@@ -157,5 +157,4 @@ class MyApp(ShowBase):
 
 def start():
     app = MyApp()
-    base.world = app
     app.run()
