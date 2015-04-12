@@ -1,3 +1,4 @@
+from sys import exit
 from math import degrees
 from panda3d.core import Mat4, Vec3, Quat
 from logic.sca import SCAActuator
@@ -25,6 +26,43 @@ def decompose_transform(matrix):
     return translation, rotation, scale
 
 
+class VisibilityActuator(SCAActuator, Bindable):
+
+    def __init__(self, name):
+        super(VisibilityActuator, self).__init__(name)
+
+        self.use_visible = True
+        self.apply_to_children = False
+
+    def _set_visible(self, obj, update_children):
+        if self.use_visible:
+            obj.show()
+
+        else:
+            obj.hide()
+
+        if update_children:
+            for child in obj.getChildren():
+                self._set_visible(child, True)
+
+    def on_update(self):
+        self._set_visible(self.object, self.apply_to_children)
+
+
+class GameActuator(SCAActuator):
+
+    MODES = 'QUIT', 'START', 'RESTART'
+
+    def __init__(self, name):
+        super(GameActuator, self).__init__(name)
+
+        self.mode = 'QUIT'
+
+    def on_update(self):
+        if self.mode == 'QUIT':
+            exit()
+
+
 class MotionActuator(SCAActuator, Bindable):
 
     MODES = 'OBJECT_CHARACTER', 'OBJECT_NORMAL', 'OBJECT_SERVO'
@@ -46,7 +84,7 @@ class MotionActuator(SCAActuator, Bindable):
 
     @mode.setter
     def mode(self, mode):
-        if not mode in self.__class__.MODES:
+        if mode not in self.__class__.MODES:
             raise ValueError("Invalid mode assigned")
 
         self._mode = mode
@@ -65,7 +103,6 @@ class MotionActuator(SCAActuator, Bindable):
 
         if self.use_local_rotation:
             orientation = rotation_quat * orientation
-            print(orientation, "ISORI")
 
         else:
             orientation *= rotation_quat
